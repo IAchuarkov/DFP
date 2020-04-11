@@ -1,2 +1,1 @@
-# DFP
-Discipline finishing prediction
+# Discipline finishing prediction
