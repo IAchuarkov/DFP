@@ -1,4 +1,6 @@
-from prefixspan import prefixspan, SequentialPattern
+#!/usr/bin/env python3
+
+from prefixspan import _prefixspan, SequentialPattern, PrefixSpan
 
 
 if __name__ == "__main__":
@@ -10,7 +12,8 @@ if __name__ == "__main__":
         [['e'], ['g'], ['a', 'f'], ['c'], ['b'], ['c']]
     ]
 
-    result = prefixspan(SequentialPattern([], None), DB, minSupport=2, maxLength=10)
+    #result = _prefixspan(SequentialPattern([], None), DB, 0.3, maxLength=10)
+    result = PrefixSpan(DB, 0.3)
 
     sorted_result = sorted(result, key=lambda record: str(record.sequence))
     print('patterns mined: {}\n'.format(len(sorted_result)))

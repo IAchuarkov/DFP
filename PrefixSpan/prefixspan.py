@@ -7,7 +7,7 @@ from collections import defaultdict
 PLACEHOLDER = '_'
 
 
-def find_frequent_items(pattern, S, minSupport):
+def find_frequent_items(pattern, S, min_support):
     placeholder_items = defaultdict(int)
     freq_items = defaultdict(int)
 
@@ -40,29 +40,30 @@ def find_frequent_items(pattern, S, minSupport):
 
     result = []
     result += [SequentialPattern([[item]], freq) 
-                    for item, freq in freq_items.items() if freq >= minSupport]
+                    for item, freq in freq_items.items() if freq >= min_support]
     result += [SequentialPattern([[PLACEHOLDER, item]], freq) 
-                    for item, freq in placeholder_items.items() if freq >= minSupport]
+                    for item, freq in placeholder_items.items() if freq >= min_support]
 
     return result           
     #return sorted(result, key = lambda pat: pat.support)
 
 
-def prefixspan(pattern, S, minSupport=3, maxLength=15):
+def _prefixspan(pattern, S, min_support_threshold, maxLength=1500):
+    min_support = min_support_threshold * len(S)
     patterns = []
-    find_frequent_items_list = find_frequent_items(pattern, S, minSupport)
+    find_frequent_items_list = find_frequent_items(pattern, S, min_support)
 
     for item in find_frequent_items_list:
         new_pattern = deepcopy(pattern)
         new_pattern.append(item)
 
-        if new_pattern.length <= maxLength and new_pattern.support >= minSupport:
+        if new_pattern.length <= maxLength and new_pattern.support >= min_support:
             patterns.append(new_pattern)
 
             if new_pattern.length < maxLength:
                 #TODO: возможно когда осталось мало паттернов не всегда стоит вообще пытаться делать проекцию
                 projected_DB = project_DB(new_pattern, S)
-                new_patterns_list = prefixspan(new_pattern, projected_DB, minSupport, maxLength)
+                new_patterns_list = _prefixspan(new_pattern, projected_DB, min_support, maxLength)
                 patterns += new_patterns_list
 
     return patterns
@@ -128,3 +129,7 @@ class SequentialPattern:
                 self.support = pat.support
         self.support = min(self.support, pat.support)
         self.length += 1  
+
+
+def PrefixSpan(DB, min_support_threshold):
+    return _prefixspan(SequentialPattern([], None), DB, min_support_threshold)
