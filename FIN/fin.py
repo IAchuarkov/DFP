@@ -96,15 +96,12 @@ def create_order_dict(F_1_dict):
     L_1_list = sorted(F_1_dict.keys(), key=lambda item:
                       (F_1_dict[item], Reverse_str_wrapper(item)))
 
-    #print(f'L_1_list: {L_1_list}')
     return {key: index for index, key in enumerate(L_1_list)}
 
 
 def build_POC_tree(DB, min_support):
     F_1_dict = find_frequent_items(DB, min_support)
     L_1_dict = create_order_dict(F_1_dict)
-    #print(f'minimal support: {min_support}')
-    # print(L_1_dict)
 
     root = POC_Node('root')
 
@@ -114,24 +111,12 @@ def build_POC_tree(DB, min_support):
             key=lambda item: L_1_dict[item], reverse=True)
 
         if freq_items:
-            #print(f'transaction: {trans}\tordered: {freq_items}')
             insert_tree(root, freq_items)
 
     set_pre_orders(root, 0)
 
     return root, L_1_dict
 
-
-# def gen_2patterns_1patterns(Node, ancestors, F_2):
-#     for ancestor in ancestors:
-#         new_pat_label = (ancestor.item_name, Node.item_name)
-#         if new_pat_label in F_2:
-#             F_2[new_pat_label].support += Node.count
-#         else:
-#             F_2[new_pat_label] = Pattern(list(new_pat_label), Node.count)
-
-#     for child in Node.children_list:
-#         gen_2patterns_1patterns(child, ancestors + [Node], F_2)
 
 
 def traverse_with_ancestors(Node, ancestors, F_2, func, freq_pat=None):
@@ -203,6 +188,7 @@ def constructing_pattern_tree(Node, Cad_set, FIS_parent, F, L_1_dict, minimal_su
             Node.childnodes.append(SE_Node([item], P.itemset))
             Next_Cad_set.append(item)
 
+    FIT_Node = []
     if Node.equiavlent_items:
         sorted_equivalent_items = sorted(
             Node.equiavlent_items, key=lambda item: L_1_dict[item], reverse=True)
@@ -212,7 +198,6 @@ def constructing_pattern_tree(Node, Cad_set, FIS_parent, F, L_1_dict, minimal_su
         if not FIS_parent:
             FIT_Node = PSet
         else:
-            FIT_Node = []
             for i, j in product(range(len(PSet)), range(len(FIS_parent))):
                 FIT_Node.append(PSet[i] + FIS_parent[j])
 
@@ -226,7 +211,7 @@ def constructing_pattern_tree(Node, Cad_set, FIS_parent, F, L_1_dict, minimal_su
         constructing_pattern_tree(
             child,
             [item for item in Next_Cad_set if L_1_dict[item]
-             > L_1_dict[child.lable[0]]],
+             > L_1_dict[child.label[0]]],
             FIT_Node,
             F,
             L_1_dict,
@@ -238,8 +223,6 @@ def _fin(DB, min_support_threshold):
     min_support = min_support_threshold * len(DB)
 
     poc_tree, L_1_dict = build_POC_tree(DB, min_support)
-    # for key, value in F_1_dict.items():
-    #     F[key] = Pattern([key], value)
 
     F = {(key,): Pattern([key], 0) for key in L_1_dict.keys()}
 
@@ -254,8 +237,6 @@ def _fin(DB, min_support_threshold):
 
     F.update(F_2)
 
-    # for key, value in F.items():
-    #     print(key, value, value.support, value.nodeset)
 
     for pattern in F_2.values():
         constructing_pattern_tree(
