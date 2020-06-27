@@ -136,7 +136,7 @@ def traverse_with_ancestors(Node, ancestors, F_2, func, freq_pat=None):
             freq_pat=freq_pat)
 
 
-def gen_2patterns_and_1patterns(Node, ancestor, F_2):
+def gen_2patterns(Node, ancestor, F_2):
 
     new_pat_label = (ancestor.item_name, Node.item_name)
     if new_pat_label in F_2:
@@ -228,7 +228,7 @@ def _fin(DB, min_support_threshold):
 
     F_2 = {}
     traverse_with_ancestors(
-        poc_tree, [], F_2, gen_2patterns_and_1patterns, freq_pat=F)
+        poc_tree, [], F_2, gen_2patterns, freq_pat=F)
 
     F_2 = {key: value for key, value in F_2.items() if value.support >=
            min_support}
