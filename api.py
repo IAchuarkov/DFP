@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
-from PrefixSpan.prefixspan import prefixspan
+from PrefixSpan.prefixspan import PrefixSpan
+from FIN.fin import FIN
 
 app = Flask(__name__)
 api = Api(app)
@@ -8,32 +11,59 @@ api = Api(app)
 
 experiments = {}
 
-#обертка над алгоритмом приводящая данные в нужный формат
-class Algorithm:
-    def __init__(self, function):
-        self.algo = function
-
-#PrefixSpan algorithm
-WebPrefixSpan = Algorithm(prefixspan)
-
 
 ALGORITHMS = {
-    0:  WebPrefixSpan,
+    0:  PrefixSpan,
+    1:  FIN,
+    'PrefixSpan': 0,
+    'FIN' : 1,
 }
 
+FIN_EXAMPLE_DATA = [
+    ['a', 'c', 'g', 'f'],
+    ['e', 'a', 'c', 'b'],
+    ['e', 'c', 'b', 'i'],
+    ['b', 'f', 'h'],
+    ['b', 'f', 'e', 'c', 'd']
+]
+
+def get_data(exp):
+    if exp.algo_id == ALGORITHMS['FIN']:
+        return FIN_EXAMPLE_DATA
+
+    return []
 
 class Experiment:
-    def __init__(self, exp_id, algo_id, params):
+    def __init__(self, exp_id, algo_id, min_support):
         self.exp_id = exp_id
         self.algo_id = algo_id
-        self.params = params
+        self.min_support = min_support
+        self.results = []
+
+        self.execute()
 
     def display(self):
-        return {
+
+        res_dict = {
             'Experiment Id': self.exp_id,
             'Algorithm Id': self.algo_id,
-            'Parameters': str(self.params) 
+            'Minimal Support': self.min_support
         }
+        
+        res_dict.update({ 
+            str(pattern.itemset) : pattern.support
+             for pattern in self.result
+        })
+        
+        return res_dict
+
+    
+    def execute(self):
+        data = get_data(self)
+        
+        self.result = FIN(data, self.min_support)
+
+
 
 
 class ExperimentDetail(Resource):
@@ -48,13 +78,11 @@ class ExperimentDetail(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('algo_id', type=int)
-        parser.add_argument('params')
+        parser.add_argument('min_support', type=float)
         args = parser.parse_args(strict=True)
 
-        #TODO: check if args are correct
-        experiments[exp_id] = Experiment(exp_id, args['algo_id'], args['params'])
+        experiments[exp_id] = Experiment(exp_id, args['algo_id'], args['min_support'])
 
-        #run ALGORITHMS[algo_id](args)
         return experiments[exp_id].display(), 201
 
 
