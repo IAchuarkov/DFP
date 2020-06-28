@@ -1,3 +1,6 @@
+# pylint: disable=missing-docstring
+# pylint: disable=invalid-name
+
 #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
 
@@ -16,7 +19,7 @@ def find_frequent_items(pattern, S, min_support):
     else:
         last_set = []
 
-    
+
     for seq in S:
 
         is_prefix = all(item in seq[0] for item in last_set)
@@ -40,15 +43,14 @@ def find_frequent_items(pattern, S, min_support):
 
     result = []
     result += [SequentialPattern([[item]], freq) 
-                    for item, freq in freq_items.items() if freq >= min_support]
+               for item, freq in freq_items.items() if freq >= min_support]
     result += [SequentialPattern([[PLACEHOLDER, item]], freq) 
-                    for item, freq in placeholder_items.items() if freq >= min_support]
+               for item, freq in placeholder_items.items() if freq >= min_support]
 
-    return result           
-    #return sorted(result, key = lambda pat: pat.support)
+    return result
 
 
-def _prefixspan(pattern, S, min_support_threshold, maxLength=1500):
+def prefixspan(pattern, S, min_support_threshold, max_length=1500):
     min_support = min_support_threshold * len(S)
     patterns = []
     find_frequent_items_list = find_frequent_items(pattern, S, min_support)
@@ -57,13 +59,13 @@ def _prefixspan(pattern, S, min_support_threshold, maxLength=1500):
         new_pattern = deepcopy(pattern)
         new_pattern.append(item)
 
-        if new_pattern.length <= maxLength and new_pattern.support >= min_support:
+        if new_pattern.length <= max_length and new_pattern.support >= min_support:
             patterns.append(new_pattern)
 
-            if new_pattern.length < maxLength:
+            if new_pattern.length < max_length:
                 #TODO: возможно когда осталось мало паттернов не всегда стоит вообще пытаться делать проекцию
                 projected_DB = project_DB(new_pattern, S)
-                new_patterns_list = _prefixspan(new_pattern, projected_DB, min_support, maxLength)
+                new_patterns_list = prefixspan(new_pattern, projected_DB, min_support, max_length)
                 patterns += new_patterns_list
 
     return patterns
@@ -83,16 +85,16 @@ def project_DB(pattern, S):
             if itemset[0] == PLACEHOLDER:
                 if len(last_itemset) > 1 and last_item in itemset:
                     suffix = make_suffix(last_itemset, seq, itemset)
-                    if len(suffix) > 0:
+                    if suffix:
                         result.append(suffix)
                     break
 
             elif all(item in itemset for item in last_itemset):
                 suffix = make_suffix(last_itemset, seq, itemset)
-                if len(suffix) > 0:
+                if suffix:
                     result.append(suffix)
                 break
-    
+
     return result
 
 def make_suffix(last_itemset, seq, itemset):
@@ -102,10 +104,10 @@ def make_suffix(last_itemset, seq, itemset):
     if item_pos == len(itemset) - 1:
         # mb a deepcopy?
         return seq[itemset_pos + 1:]
-    else:
-        result = seq[itemset_pos:]
-        result[0] = [PLACEHOLDER] + itemset[item_pos + 1:]
-        return result
+
+    result = seq[itemset_pos:]
+    result[0] = [PLACEHOLDER] + itemset[item_pos + 1:]
+    return result
 
 
 class SequentialPattern:
@@ -128,8 +130,8 @@ class SequentialPattern:
             if self.support is None:
                 self.support = pat.support
         self.support = min(self.support, pat.support)
-        self.length += 1  
+        self.length += 1
 
 
 def PrefixSpan(DB, min_support_threshold):
-    return _prefixspan(SequentialPattern([], None), DB, min_support_threshold)
+    return prefixspan(SequentialPattern([], None), DB, min_support_threshold)

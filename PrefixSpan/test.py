@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from prefixspan import _prefixspan, SequentialPattern, PrefixSpan
+from prefixspan import SequentialPattern, PrefixSpan
 
 
 if __name__ == "__main__":
